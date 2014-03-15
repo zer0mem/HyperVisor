@@ -25,7 +25,8 @@ void HVCallback4(
 //ctor dtor
 
 CCRonos::CCRonos() :
-	m_vCpu(static_cast<BYTE>(KeQueryActiveProcessorCount(&m_cpu)))
+	m_vCpu(static_cast<BYTE>(KeQueryActiveProcessorCount(&m_cpu))),
+	m_exceptionsMask(0)
 {
 	DbgPrint("\n>CCRonos ctor");	
 	RtlZeroMemory(m_traps,sizeof(m_traps));
@@ -68,13 +69,13 @@ void CCRonos::PerCoreAction(
 	)
 {
 	DbgPrint("CCRonos::PerCoreAction - ");
-	DbgPrint("\nLets Go start virtualizee cpu : %x !\n", coreId);
+	DbgPrint("\nLets Go start virtualizee cpu : %x [%p]!\n", coreId, m_exceptionsMask);
 	
 	::new(&(m_vCpu[coreId])) 
 		CVirtualizedCpu(
 			coreId, 
 			m_traps, 
-			!!m_traps[VMX_EXIT_EXCEPTION], 
+			m_exceptionsMask, 
 			reinterpret_cast<VMCallback>(HVCallback), 
 			&m_callbacks
 			);
@@ -192,7 +193,7 @@ void HVCallback1(
 	__inout ULONG_PTR reg[REG_COUNT] 
 	)
 {
-	VM_STATUS status;
+	EVmErrors status;
 	ULONG_PTR ExitReason = Instrinsics::VmRead(VMX_VMCS32_RO_EXIT_REASON, &status);
 
 	if (VM_OK(status))
@@ -206,7 +207,7 @@ void HVCallback2(
 	__inout ULONG_PTR reg[REG_COUNT] 
 	)
 {
-	VM_STATUS status;
+	EVmErrors status;
 	ULONG_PTR ExitReason = Instrinsics::VmRead(VMX_VMCS32_RO_EXIT_REASON, &status);
 
 	if (VM_OK(status))
@@ -220,7 +221,7 @@ void HVCallback3(
 	__inout ULONG_PTR reg[REG_COUNT] 
 	)
 {
-	VM_STATUS status;
+	EVmErrors status;
 	ULONG_PTR ExitReason = Instrinsics::VmRead(VMX_VMCS32_RO_EXIT_REASON, &status);
 
 	if (VM_OK(status))

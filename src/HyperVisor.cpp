@@ -69,7 +69,7 @@ CHyperVisor::CHyperVisor(
 					m_hvCallbacks[i] = DUMMY;
 				}
 			}
-		}		
+		}
 		else
 		{
 			m_hvCallbacks[i] = traps[i];
@@ -97,7 +97,7 @@ VMTrap CHyperVisor::HVEntryPoint(
 {
 	m_callback(reg, param);
 
-	VM_STATUS status;
+	EVmErrors status;
 	ULONG_PTR ExitReason = Instrinsics::VmRead(VMX_VMCS32_RO_EXIT_REASON, &status);
 	if (VM_OK(status))
 	{
@@ -106,25 +106,20 @@ VMTrap CHyperVisor::HVEntryPoint(
 		{
 			ULONG_PTR GuestEIP = Instrinsics::VmRead(VMX_VMCS64_GUEST_RIP, &status);
 			if (VM_OK(status))
-			{
-				status = Instrinsics::VmWrite(VMX_VMCS64_GUEST_RIP, GuestEIP + ExitInstructionLength);
-				if (VM_OK(status))
-				{
-					if((ExitReason > VMX_EXIT_VMCALL) && (ExitReason <= VMX_EXIT_VMXON))
-					{
-						ULONG_PTR GuestRFLAGS = Instrinsics::VmRead(VMX_VMCS_GUEST_RFLAGS, &status);
-						if (VM_OK(status))
-							(void)Instrinsics::VmWrite(VMX_VMCS_GUEST_RFLAGS, GuestRFLAGS & (~0x8d5) | 0x1);
-					}
-
-					if (VMX_EXIT_CRX_MOVE == ExitReason)
-						HandleCrxAccess(reg);
-
-					return m_hvCallbacks[ExitReason];
-
-				}
-			}
+				(void)Instrinsics::VmWrite(VMX_VMCS64_GUEST_RIP, GuestEIP + ExitInstructionLength);
 		}
+
+		if((ExitReason > VMX_EXIT_VMCALL) && (ExitReason <= VMX_EXIT_VMXON))
+		{
+			ULONG_PTR GuestRFLAGS = Instrinsics::VmRead(VMX_VMCS_GUEST_RFLAGS, &status);
+			if (VM_OK(status))
+				(void)Instrinsics::VmWrite(VMX_VMCS_GUEST_RFLAGS, GuestRFLAGS & (~0x8d5) | 0x1);
+		}
+
+		if (VMX_EXIT_CRX_MOVE == ExitReason)
+			HandleCrxAccess(reg);
+
+		return m_hvCallbacks[ExitReason];
 	}
 	return DUMMY;
 }
@@ -133,7 +128,7 @@ void CHyperVisor::HandleCrxAccess(
 	__inout ULONG_PTR reg[REG_COUNT] 
 	)
 {
-	VM_STATUS status;
+	EVmErrors status;
 	ULONG_PTR ExitQualification = Instrinsics::VmRead(VMX_VMCS_RO_EXIT_QUALIFICATION, &status);
 	if (VM_OK(status))
 	{

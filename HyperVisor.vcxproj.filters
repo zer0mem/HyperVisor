@@ -10,14 +10,20 @@
     <ClCompile Include="src\VMX.cpp">
       <Filter>src\VMX</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\base\libc.cpp">
+    <ClCompile Include="..\Common\base\Common.cpp">
       <Filter>Common\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\Kernel\MemoryMapping.cpp">
+    <ClCompile Include="..\Common\base\instrinsics.cpp">
+      <Filter>Common\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\base\libc.cpp">
+      <Filter>Common\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Kernel\MemoryMapping.cpp">
       <Filter>Common\Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\base\instrinsics.cpp">
-      <Filter>Common\base</Filter>
+    <ClCompile Include="src\Cronos.cpp">
+      <Filter>src\Cronos</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -36,20 +42,29 @@
     <ClInclude Include="src\VMX.h">
       <Filter>src\VMX</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Common\base\Common.h">
+    <ClInclude Include="..\Common\base\Common.h">
       <Filter>Common\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Common\base\instrinsics.h">
+    <ClInclude Include="..\Common\base\instrinsics.h">
       <Filter>Common\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Common\CPU\msr.h">
+    <ClInclude Include="..\Common\base\Shared.h">
+      <Filter>Common\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\base\SharedMacros.hpp">
+      <Filter>Common\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\CPU\msr.h">
       <Filter>Common\CPU</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Common\Kernel\MemoryMapping.h">
+    <ClInclude Include="..\Common\Kernel\MemoryMapping.h">
       <Filter>Common\Kernel</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Common\base\SharedMacros.hpp">
-      <Filter>Common\base</Filter>
+    <ClInclude Include="src\Cronos.h">
+      <Filter>src\Cronos</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VmmAutoExit.hpp">
+      <Filter>src\HyperVisor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -95,6 +110,9 @@
     <Filter Include="Common\CPU">
       <UniqueIdentifier>{0a6dedeb-2c76-45aa-975c-af749a8d813a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Cronos">
+      <UniqueIdentifier>{b0af3d85-daac-4087-b4fe-0737566b59ae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="src\amd64\_hv.asm">
@@ -103,12 +121,12 @@
     <MASM Include="src\amd64\_vmx.asm">
       <Filter>src\amd64</Filter>
     </MASM>
-    <MASM Include="..\..\Common\amd64\_instrinsics.asm">
+    <MASM Include="..\Common\amd64\_instrinsics.asm">
       <Filter>Common\amd64</Filter>
     </MASM>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\Common\amd64\common.inc">
+    <None Include="..\Common\amd64\common.inc">
       <Filter>Common\amd64</Filter>
     </None>
   </ItemGroup>

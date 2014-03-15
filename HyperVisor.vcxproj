@@ -227,7 +227,7 @@
     </Midl>
     <ClCompile>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(SolutionDir);C:\Program Files (x86)\Windows Kits\8.0\Include\shared;C:\Program Files (x86)\Windows Kits\8.0\Include\km;C:\Program Files (x86)\Windows Kits\8.0\Include\um;C:\Program Files (x86)\Windows Kits\8.0\Include\km\crt;%(AdditionalIncludeDirectories);$(ProjectDir);$(BASEDIR2K3)\inc\ddk\wnet;$(BASEDIR2K3)\inc\ifs\wnet;$(BASEDIR2K3)\inc\wnet;$(BASEDIR2K3)\inc\crt</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\src;$(SolutionDir);C:\Program Files (x86)\Windows Kits\8.0\Include\shared;C:\Program Files (x86)\Windows Kits\8.0\Include\km;C:\Program Files (x86)\Windows Kits\8.0\Include\um;C:\Program Files (x86)\Windows Kits\8.0\Include\km\crt;%(AdditionalIncludeDirectories);$(ProjectDir);$(BASEDIR2K3)\inc\ddk\wnet;$(BASEDIR2K3)\inc\ifs\wnet;$(BASEDIR2K3)\inc\wnet;$(BASEDIR2K3)\inc\crt</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64; _WIN64; _M_AMD64; _AMD_64_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
       <StringPooling>true</StringPooling>
@@ -268,35 +268,40 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Common\base\instrinsics.cpp" />
-    <ClCompile Include="..\..\Common\base\libc.cpp" />
-    <ClCompile Include="..\..\Common\Kernel\MemoryMapping.cpp" />
+    <ClCompile Include="..\Common\base\Common.cpp" />
+    <ClCompile Include="..\Common\base\instrinsics.cpp" />
+    <ClCompile Include="..\Common\base\libc.cpp" />
+    <ClCompile Include="..\Common\Kernel\MemoryMapping.cpp" />
+    <ClCompile Include="src\Cronos.cpp" />
     <ClCompile Include="src\HyperVisor.cpp" />
     <ClCompile Include="src\VirtualizedCpu.cpp" />
     <ClCompile Include="src\VMX.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Common\base\Common.h" />
-    <ClInclude Include="..\..\Common\base\instrinsics.h" />
-    <ClInclude Include="..\..\Common\base\SharedMacros.hpp" />
-    <ClInclude Include="..\..\Common\CPU\msr.h" />
-    <ClInclude Include="..\..\Common\Kernel\MemoryMapping.h" />
+    <ClInclude Include="..\Common\base\Common.h" />
+    <ClInclude Include="..\Common\base\instrinsics.h" />
+    <ClInclude Include="..\Common\base\Shared.h" />
+    <ClInclude Include="..\Common\base\SharedMacros.hpp" />
+    <ClInclude Include="..\Common\CPU\msr.h" />
+    <ClInclude Include="..\Common\Kernel\MemoryMapping.h" />
     <ClInclude Include="Common\base\HVCommon.h" />
     <ClInclude Include="Common\CPU\vmcs.h" />
+    <ClInclude Include="src\Cronos.h" />
     <ClInclude Include="src\HyperVisor.h" />
     <ClInclude Include="src\VirtualizedCpu.h" />
+    <ClInclude Include="src\VmmAutoExit.hpp" />
     <ClInclude Include="src\VMX.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="driver_template.rc" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="..\..\Common\amd64\_instrinsics.asm" />
+    <MASM Include="..\Common\amd64\_instrinsics.asm" />
     <MASM Include="src\amd64\_hv.asm" />
     <MASM Include="src\amd64\_vmx.asm" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\Common\amd64\common.inc" />
+    <None Include="..\Common\amd64\common.inc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

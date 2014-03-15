@@ -36,7 +36,7 @@ CVirtualizedCpu::~CVirtualizedCpu()
 	if (NULL != m_hvStack)
 	{
 		KeSetSystemAffinityThread(PROCID(m_cpuCore));
-		((CHyperVisor*)(m_hvStack + 1))->~CHyperVisor();
+		(reinterpret_cast<CHyperVisor*>(m_hvStack + 1))->~CHyperVisor();
 		MmFreeContiguousMemory(m_hvStack);
 	}
 }
@@ -74,23 +74,18 @@ BYTE CVirtualizedCpu::GetCoreId(
 	__in const ULONG_PTR* stack 
 	)
 {
-	VM_STATUS status;
+	EVmErrors status;
 	ULONG_PTR ds = Instrinsics::VmRead(VMX_VMCS16_GUEST_FIELD_DS, &status);
+	
+	xchgds(&ds);
 
-	ASSERT(VM_OK(status));
+	ULONG_PTR* stack_top = CVirtualizedCpu::GetTopOfStack(stack);
+	CHyperVisor* hypervisor = reinterpret_cast<CHyperVisor*>(stack_top + 2);
+	BYTE cored_id = hypervisor->GetCoredId();
+	
+	writeds(ds);
 
-	if (VM_OK(status))
-	{
-		xchgds(&ds);
-
-		ULONG_PTR* stack_top = CVirtualizedCpu::GetTopOfStack(stack);
-		CHyperVisor* hypervisor = reinterpret_cast<CHyperVisor*>(stack_top + 2);
-		BYTE cored_id = hypervisor->GetCoredId();
-
-		writeds(ds);
-		return cored_id;
-	}
-	return 0;
+	return cored_id;
 }
 
 EXTERN_C 
@@ -98,22 +93,16 @@ VMTrap HVExitTrampoline(
 	__inout ULONG_PTR reg[REG_COUNT]
 	)
 {
-	VM_STATUS status;
+	EVmErrors status;
 	ULONG_PTR ds = Instrinsics::VmRead(VMX_VMCS16_GUEST_FIELD_DS, &status);
 
-	ASSERT(VM_OK(status));
+	xchgds(&ds);
 
-	if (VM_OK(status))
-	{
-		xchgds(&ds);
+	ULONG_PTR* stack_top = CVirtualizedCpu::GetTopOfStack(reg);
+	CHyperVisor* hypervisor = reinterpret_cast<CHyperVisor*>(stack_top + 2);
+	VMTrap handler = hypervisor->HVEntryPoint(reg, (stack_top + 1));
 
-		ULONG_PTR* stack_top = CVirtualizedCpu::GetTopOfStack(reg);
-		CHyperVisor* hypervisor = reinterpret_cast<CHyperVisor*>(stack_top + 2);
-		VMTrap handler = hypervisor->HVEntryPoint(reg, (stack_top + 1));
+	writeds(ds);
 
-		writeds(ds);
-
-		return handler;
-	}
-	return CHyperVisor::DummyHandler();
+	return handler;
 }

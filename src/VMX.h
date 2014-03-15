@@ -13,9 +13,9 @@ class CVmx
 public:
 	CVmx(
 		__in KAFFINITY procId,
-		__in ULONG_PTR expcetionMask = 0
+		__in size_t exceptionhandling = 0
 		);
-	~CVmx();
+	~CVmx();	
 
 	__checkReturn 
 	bool InstallHyperVisor(
@@ -24,8 +24,8 @@ public:
 		);
 	
 	__checkReturn
-	VM_STATUS  VmcsToRing0();
-
+	EVmErrors VmcsToRing0();
+	
 	//force inline and public
 	__checkReturn 
 	bool CpuActivated() const
@@ -47,7 +47,7 @@ public:
 
 protected:
 	__checkReturn 
-	VM_STATUS VmcsInit();
+	bool VmcsInit();
 
 	__checkReturn 
 	bool GetGuestState(
@@ -59,27 +59,26 @@ protected:
 		__in ULONG_PTR selector
 		);
 
-	__checkReturn
-	VM_STATUS SetSegSelector(
+	EVmErrors SetSegSelector(
 		__in ULONG_PTR segSelector,
 		__in ULONG_PTR segField
 		);
 
 	__checkReturn
-	VM_STATUS SetCRx();
+	EVmErrors SetCRx();
 
 	__checkReturn
-	VM_STATUS SetControls();
+	EVmErrors SetControls();
 
 	__checkReturn
-	VM_STATUS SetDT();
+	EVmErrors SetDT();
 
 	__checkReturn
-	VM_STATUS SetSysCall();
+	EVmErrors SetSysCall();
 
 protected:
 	bool m_cpuActivated;
-	ULONG_PTR m_expcetionMask;
+	size_t m_exceptionMask;
 
 private:
 	bool m_preparedState;

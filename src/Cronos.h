@@ -73,6 +73,8 @@ protected:
 	CALLBACK m_callbacks;
 	VMTrap m_traps[MAX_CALLBACK];
 
+	ULONG_PTR m_exceptionsMask;
+
 	KAFFINITY m_cpu;
 	CObjHolder<CVirtualizedCpu> m_vCpu;
 };
