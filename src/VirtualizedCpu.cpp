@@ -3,52 +3,50 @@
  * @author created by: Peter Hlavaty
  */
 
-#include "drv_common.h"
-
+#include <ntifs.h>
 #include "VirtualizedCpu.h"
-#include "../../Common/base/SharedMacros.hpp"
 
 CVirtualizedCpu::CVirtualizedCpu( 
 	__in BYTE cpuCore, 
-	__in_opt const VMTrap traps[MAX_CALLBACK], 
+	__in_opt const VMTrap traps[MAX_HV_CALLBACK], 
 	__in_opt ULONG_PTR exceptionMask,
 	__in_opt const VMCallback callback,
 	__in_opt const VOID* param 
 	) : m_vmx(PROCID(cpuCore), exceptionMask), 
-		m_cpuCore(cpuCore)
-{	
-	LARGE_INTEGER HighestAcceptableAddress;
-	HighestAcceptableAddress.HighPart = -1;
-	m_hvStack = reinterpret_cast<ULONG_PTR*>(MmAllocateContiguousMemory(HYPERVISOR_STACK_PAGE, HighestAcceptableAddress));
-
-	if (NULL == m_hvStack)
+		m_cpuCore(cpuCore),
+		m_hvStack(static_cast<ULONG_PTR*>(
+			MmAllocateContiguousMemory(HYPERVISOR_STACK_PAGE, GetTopAdress())),
+			MmFreeContiguousMemory)
+{
+	if (!m_hvStack.get())
 		return;
 
-	RtlZeroMemory(m_hvStack, HYPERVISOR_STACK_PAGE);
+	RtlZeroMemory(m_hvStack.get(), HYPERVISOR_STACK_PAGE);
 
-	m_hvStack[0] = kStackMark;
-	m_hvStack[1] = (ULONG_PTR)param;
-	::new(m_hvStack + 2) CHyperVisor(cpuCore, traps, callback);
+	m_hvStack.get()[0] = kStackMark;
+	m_hvStack.get()[1] = (ULONG_PTR)param;
+	::new(m_hvStack.get() + 2) CHyperVisor(cpuCore, traps, callback);
 }
 
 CVirtualizedCpu::~CVirtualizedCpu()
 {
-	if (NULL != m_hvStack)
-	{
-		KeSetSystemAffinityThread(PROCID(m_cpuCore));
-		(reinterpret_cast<CHyperVisor*>(m_hvStack + 1))->~CHyperVisor();
-		MmFreeContiguousMemory(m_hvStack);
-	}
+	if (!m_hvStack.get())
+		return;
+
+	KeSetSystemAffinityThread(PROCID(m_cpuCore));
+	(reinterpret_cast<CHyperVisor*>(m_hvStack.get() + 1))->~CHyperVisor();
 }
 
 __checkReturn 
-bool CVirtualizedCpu::VirtualizationON()
+bool
+CVirtualizedCpu::VirtualizationON()
 {
-	return m_vmx.InstallHyperVisor(CHyperVisor::HvExitPoint(), reinterpret_cast<void*>(reinterpret_cast<ULONG_PTR>(m_hvStack) + HYPERVISOR_STACK_PAGE - 1));
+	return m_vmx.InstallHyperVisor(CHyperVisor::HvExitPoint(), reinterpret_cast<void*>(reinterpret_cast<size_t>(m_hvStack.get()) + HYPERVISOR_STACK_PAGE - 1));
 }
 
 __checkReturn 
-bool CVirtualizedCpu::VirtualizationOFF()
+bool
+CVirtualizedCpu::VirtualizationOFF()
 {
 	if (m_vmx.CpuActivated())
 	{
@@ -59,18 +57,20 @@ bool CVirtualizedCpu::VirtualizationOFF()
 
 __forceinline
 __checkReturn 
-ULONG_PTR* CVirtualizedCpu::GetTopOfStack( 
+ULONG_PTR*
+CVirtualizedCpu::GetTopOfStack( 
 	__in const ULONG_PTR* stack
 	)
 {
-	while (kStackMark != *stack)
-		stack = reinterpret_cast<const ULONG_PTR*>(ALIGN(stack - 1, PAGE_SIZE));
+	while (kStackMark != stack[0])
+		stack = CommonRoutines::align<ULONG_PTR>(stack - 1, PAGE_SIZE);
 
 	return const_cast<ULONG_PTR*>(stack);
 }
 
 __checkReturn 
-BYTE CVirtualizedCpu::GetCoreId( 
+BYTE 
+CVirtualizedCpu::GetCoreId( 
 	__in const ULONG_PTR* stack 
 	)
 {
@@ -89,7 +89,8 @@ BYTE CVirtualizedCpu::GetCoreId(
 }
 
 EXTERN_C 
-VMTrap HVExitTrampoline( 
+VMTrap 
+HVExitTrampoline( 
 	__inout ULONG_PTR reg[REG_COUNT]
 	)
 {

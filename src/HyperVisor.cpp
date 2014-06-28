@@ -3,9 +3,7 @@
  * @author created by: Peter Hlavaty
  */
 
-#include "drv_common.h"
 #include "HyperVisor.h"
-#include "../Common/base/instrinsics.h"
 
 //////////////////////////////////////////////////////////////////////
 // ASSEMBLY DEPENDENCIES
@@ -29,13 +27,13 @@ EXTERN_C void __hv_rdtsc();
 
 CHyperVisor::CHyperVisor(
 	__in BYTE coreId, 
-	__in_opt const VMTrap traps[MAX_CALLBACK], 
+	__in_opt const VMTrap traps[MAX_HV_CALLBACK], 
 	__in_opt const VMCallback callback
 	) : m_coreId()
 {
 	m_callback = callback ? callback : reinterpret_cast<VMCallback>(DUMMY);
 
-	for(int i = 0; i < MAX_CALLBACK; i++)
+	for(int i = 0; i < MAX_HV_CALLBACK; i++)
 	{
 		if(NULL == traps || NULL == traps[i])
 		{

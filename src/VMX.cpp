@@ -3,16 +3,27 @@
  * @author created by: Peter Hlavaty
  */
 
-#include "drv_common.h"
 #include "VMX.h"
-#include "../../Common/base/SharedMacros.hpp"
-#include "../../Common/Kernel/IRQL.hpp"
+#include <Common/cpu/msr.h>
 
-EXTERN_C VOID get_guest_exit(__out ULONG_PTR* guestRip, __out ULONG_PTR* guestRsp);
+extern "C" 
+void
+__fastcall
+get_guest_exit(
+	__out ULONG_PTR* guestRip, 
+	__out ULONG_PTR* guestRsp
+	);
 
 #define VMWRITE_ERR_QUIT(field, val) if (!VM_OK((status = Instrinsics::VmWrite((field), (val))))) return status;
 #define VMWRITE_ERR_QUITB(field, val) if (!VM_OK((status = Instrinsics::VmWrite((field), (val))))) return !!status;
 
+void
+CVmx::MmFreeNonCachedMemoryHVRes(
+	__inout void* hvResource
+	)
+{
+	MmFreeNonCachedMemory(hvResource, PAGE_SIZE);
+}
 
 //////////////////////////////////////////////////////////////////////
 // PUBLIC INTERFACE
@@ -22,14 +33,17 @@ CVmx::CVmx(
 	__in KAFFINITY procId,
 	__in size_t exceptionhandling
 	) : m_cpuActivated(false),
-		m_exceptionMask(exceptionhandling)
+		m_exceptionMask(exceptionhandling),
+		m_pGVmcs(static_cast<char*>(MmAllocateNonCachedMemory(PAGE_SIZE)), MmFreeNonCachedMemoryHVRes),
+		m_pHVmcs(static_cast<char*>(MmAllocateNonCachedMemory(PAGE_SIZE)), MmFreeNonCachedMemoryHVRes)
 {
 	RtlZeroMemory(&m_guestState, sizeof(m_guestState));
 	m_preparedState = GetGuestState(procId);
 }
 
 __checkReturn 
-bool CVmx::InstallHyperVisor( 
+bool
+CVmx::InstallHyperVisor( 
 	__in const void* hvEntryPoint,
 	__in void* hvStack 
 	)
@@ -37,7 +51,7 @@ bool CVmx::InstallHyperVisor(
 	if (m_preparedState)
 	{
 		m_guestState.HRIP = hvEntryPoint;
-		m_guestState.HRSP = reinterpret_cast<ULONG_PTR*>(ALIGN(hvStack, 0x100));
+		m_guestState.HRSP = CommonRoutines::align<ULONG_PTR>(hvStack, 0x100);
 
 		m_cpuActivated = VmcsInit();
 	}
@@ -45,17 +59,9 @@ bool CVmx::InstallHyperVisor(
 	return m_cpuActivated;
 }
 
-CVmx::~CVmx()
-{
-	if (m_preparedState)
-	{
-		MmFreeNonCachedMemory(m_guestState.GVmcs.pvmcs, PAGE_SIZE);	
-		MmFreeNonCachedMemory(m_guestState.HVmcs.pvmcs, PAGE_SIZE);
-	}
-}
-
 //not yet active
-EVmErrors CVmx::VmcsToRing0()
+EVmErrors 
+CVmx::VmcsToRing0()
 {
 	EVmErrors status;
 	//set guest CR
@@ -87,13 +93,15 @@ EVmErrors CVmx::VmcsToRing0()
 //////////////////////////////////////////////////////////////////////
 
 __checkReturn 
-bool CVmx::IsVirtualizationEnabled()
+bool 
+CVmx::IsVirtualizationEnabled()
 {
 	return (0 != (rdmsr(IA32_FEATURE_CONTROL_CODE) & FEATURE_CONTROL_VMXON_ENABLED));
 }
 
 __checkReturn 
-bool CVmx::IsVirtualizationLocked()
+bool 
+CVmx::IsVirtualizationLocked()
 {
 	return (0 != (rdmsr(IA32_FEATURE_CONTROL_CODE) & FEATURE_CONTROL_LOCKED));
 }
@@ -109,7 +117,8 @@ void CVmx::EnableVirtualization()
 //////////////////////////////////////////////////////////////////////
 
 __checkReturn 
-bool CVmx::VmcsInit()
+bool 
+CVmx::VmcsInit()
 {
 	ULONG_PTR guest_rsp;
 	ULONG_PTR guest_rip;
@@ -131,12 +140,12 @@ bool CVmx::VmcsInit()
 		EnableVirtualization();
 	}
 	DbgPrint("\n=Virtualization is enabled! exc mask : %p //%p %p \n", m_exceptionMask, guest_rsp, guest_rip);
-	KeBreak();
 
 	{
-		CDisableInterrupts idis;
+		cli();
 		writecr0(m_guestState.CR0);
 		writecr4(m_guestState.CR4);
+		sti();
 	}
 
 	*(reinterpret_cast<ULONG_PTR*>(m_guestState.GVmcs.pvmcs)) = rdmsr(IA32_VMX_BASIC_MSR_CODE);
@@ -236,7 +245,6 @@ bool CVmx::VmcsInit()
 	VMWRITE_ERR_QUIT(VMX_VMCS_CTRL_EPTP_HIGH, m_guestState.CR3 >> 32);
 	*/
 
-
 	DbgPrint("\ncr0 %p", m_guestState.CR0);	
 	DbgPrint("\ncr3 %p", m_guestState.CR3);
 	DbgPrint("\ncr4 %p", m_guestState.CR4);
@@ -264,12 +272,13 @@ bool CVmx::VmcsInit()
 	vmlaunch();
 
 	DbgPrint("\nHYPERVISOR IS NOT TURNED ON, something failed!\n");
-	KeBreak();
+	DbgBreakPoint();
 	return false;
 }
 
 __checkReturn 
-bool CVmx::GetGuestState( 
+bool 
+CVmx::GetGuestState( 
 	__in KAFFINITY procId 
 	)
 {
@@ -297,14 +306,14 @@ bool CVmx::GetGuestState(
 	m_guestState.SESP = reinterpret_cast<BYTE*>(rdmsr(IA32_SYSENTER_ESP) & SEG_D_LIMIT);
 
 	m_guestState.GVmcs.pvmcs = MmAllocateNonCachedMemory(PAGE_SIZE);
-	if (NULL == m_guestState.GVmcs.pvmcs)
+	if (NULL == m_pGVmcs.get())
 		return false;
 
 	RtlZeroMemory(m_guestState.GVmcs.pvmcs, PAGE_SIZE);
 	m_guestState.GVmcs.vmcs = MmGetPhysicalAddress(m_guestState.GVmcs.pvmcs);
 
 	m_guestState.HVmcs.pvmcs = MmAllocateNonCachedMemory(PAGE_SIZE);
-	if (NULL == m_guestState.HVmcs.pvmcs)
+	if (NULL == m_pHVmcs.get())
 		return false;
 
 	RtlZeroMemory(m_guestState.HVmcs.pvmcs, PAGE_SIZE);
@@ -320,7 +329,8 @@ bool CVmx::GetGuestState(
 	return true;
 }
 
-EVmErrors CVmx::SetCRx()
+EVmErrors
+CVmx::SetCRx()
 {
 	EVmErrors status;
 	VMWRITE_ERR_QUIT(VMX_VMCS_CTRL_CR0_READ_SHADOW, CR0_PG);//PG
@@ -340,7 +350,8 @@ EVmErrors CVmx::SetCRx()
 	return status;
 }
 
-EVmErrors CVmx::SetControls()
+EVmErrors 
+CVmx::SetControls()
 {
 	EVmErrors status;
 	VMWRITE_ERR_QUIT(VMX_VMCS_CTRL_PIN_EXEC_CONTROLS, reinterpret_cast<ULONG_PTR>(m_guestState.PIN));
@@ -350,7 +361,8 @@ EVmErrors CVmx::SetControls()
 	return status;
 }
 
-EVmErrors CVmx::SetDT()
+EVmErrors 
+CVmx::SetDT()
 {
 	EVmErrors status;
 	VMWRITE_ERR_QUIT(VMX_VMCS64_GUEST_IDTR_BASE, m_guestState.Idtr.base);
@@ -367,7 +379,8 @@ EVmErrors CVmx::SetDT()
 	return status;
 }
 
-EVmErrors CVmx::SetSysCall()
+EVmErrors
+CVmx::SetSysCall()
 {
 	EVmErrors status;
 
@@ -396,7 +409,8 @@ EVmErrors CVmx::SetSysCall()
 	return status;
 }
 
-void CVmx::GetSegmentDescriptor( 
+void 
+CVmx::GetSegmentDescriptor( 
 	__out SEGMENT_SELECTOR* segSel, 
 	__in ULONG_PTR selector 
 	)
@@ -409,7 +423,7 @@ void CVmx::GetSegmentDescriptor(
 	segSel->base = seg->BaseLow | (seg->BaseMid << 16) | (seg->BaseHigh << 24);
 	segSel->attributes = (USHORT)(seg->AttributesLow | (seg->AttributesHigh << 8));
 
-	//is TSS or CALLBACK ?
+	//is TSS or HV_CALLBACK ?
 	if (!(seg->AttributesLow & NORMAL))
 		segSel->base = (segSel->base & SEG_D_LIMIT) | ((*(PULONG64) ((PUCHAR)seg + 8)) << 32);
 
@@ -419,7 +433,8 @@ void CVmx::GetSegmentDescriptor(
 	segSel->rights = (segSel->selector ? (((PUCHAR) &segSel->attributes)[0] + (((PUCHAR) &segSel->attributes)[1] << 12)) : 0x10000);
 }
 
-EVmErrors CVmx::SetSegSelector( 
+EVmErrors 
+CVmx::SetSegSelector( 
 	__in ULONG_PTR segSelector, 
 	__in ULONG_PTR segField 
 	)

@@ -1,12 +1,8 @@
-/**
- * @file VirtualizedCpu.h
- * @author created by: Peter Hlavaty
- */
-
-#ifndef __VIRTUALIZEDCPU_H__
-#define __VIRTUALIZEDCPU_H__
+#pragma once
 
 #include "../Common/base/HVCommon.h"
+
+#include <memory>
 
 #include "VMX.h"
 #include "HyperVisor.h"
@@ -16,7 +12,7 @@ class CVirtualizedCpu
 public:
 	CVirtualizedCpu(
 		__in BYTE cpuCore, 
-		__in_opt const VMTrap traps[MAX_CALLBACK], 
+		__in_opt const VMTrap traps[MAX_HV_CALLBACK], 
 		__in_opt ULONG_PTR exceptionMask = 0,
 		__in_opt const VMCallback callback = NULL, 
 		__in_opt const VOID* param = NULL
@@ -25,26 +21,40 @@ public:
 	~CVirtualizedCpu();
 
 	__checkReturn 
-	bool VirtualizationON();
+	bool 
+	VirtualizationON();
 
 	__checkReturn
-	bool VirtualizationOFF();
+	bool
+	VirtualizationOFF();
 
 	__checkReturn
-	static BYTE GetCoreId(
+	static 
+	BYTE 
+	GetCoreId(
 		__in const ULONG_PTR* stack
 		);
 
 	__checkReturn 
-	static inline ULONG_PTR* GetTopOfStack(
+	static 
+	__forceinline 
+	ULONG_PTR* 
+	GetTopOfStack(
 		__in const ULONG_PTR* stack
 		);
 
 protected:
+	static 
+	PHYSICAL_ADDRESS 
+	GetTopAdress()
+	{
+		PHYSICAL_ADDRESS addr;
+		addr.HighPart = -1;
+		return addr;
+	}
+
 	BYTE m_cpuCore;
-	ULONG_PTR* m_hvStack;
+	std::unique_ptr<ULONG_PTR, decltype(&MmFreeContiguousMemory)> m_hvStack;
 
 	CVmx m_vmx;
 };
-
-#endif //__VIRTUALIZEDCPU_H__

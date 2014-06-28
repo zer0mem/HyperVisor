@@ -1,29 +1,22 @@
-/**
- * @file Cronos.h
- * @author created by: Peter Hlavaty
- */
+#pragma once
 
-#ifndef __CRONOS_H__
-#define __CRONOS_H__
-
+#include <Common/auto/MemoryObj.hpp>
 #include "../../HyperVisor/src/VirtualizedCpu.h"
-#include "../../Common/utils/ProcessorWalker.hpp"
-#include "../../Common/base/MemoryObj.hpp"
 
-struct CALLBACK
+struct HV_CALLBACK
 {
 	VMTrap Callback;
-	CALLBACK* Next;
+	HV_CALLBACK* Next;
 	
-	CALLBACK()
+	HV_CALLBACK()
 	{
-		Callback = NULL;
-		Next = NULL;
+		Callback = nullptr;
+		Next = nullptr;
 	}
 
-	CALLBACK(
+	HV_CALLBACK(
 		__in const VMTrap callback, 
-		__in CALLBACK* next
+		__in HV_CALLBACK* next
 		)
 	{
 		Callback = callback;
@@ -37,12 +30,16 @@ public:
 	CCRonos();
 	~CCRonos();
 
-	void Install();
-	void StopVirtualization();
+	void 
+	Install();
+
+	void 
+	StopVirtualization();
 
 	static 
-	bool RegisterCallback(
-		__in CALLBACK* callbacks, 
+	bool 
+	RegisterCallback(
+		__in HV_CALLBACK* callbacks, 
 		__in const VMTrap callback 
 		);	
 
@@ -50,37 +47,39 @@ protected:
 	bool EnableVirtualization();
 
 	static 
-	void HVCallback(
+	void 
+	HVCallback(
 		__inout ULONG_PTR reg[REG_COUNT], 
-		__in_opt const CALLBACK** callbacks
+		__in_opt const HV_CALLBACK** callbacks
 		);
 
 	static 
-	void HVCpuid(
+	void 
+	HVCpuid(
 		__inout ULONG_PTR reg[REG_COUNT]
 		);
 
 	virtual 
-	void PerCoreAction(
+	void 
+	PerCoreAction(
 		__in BYTE coreId
 		);
 
 	virtual 
 	__checkReturn 
-	bool SetVirtualizationCallbacks();
+	bool 
+	SetVirtualizationCallbacks();
 
 protected:
-	CALLBACK m_callbacks;
-	VMTrap m_traps[MAX_CALLBACK];
+	HV_CALLBACK m_callbacks;
+	VMTrap m_traps[MAX_HV_CALLBACK];
 
 	ULONG_PTR m_exceptionsMask;
 
 	KAFFINITY m_cpu;
-	CObjHolder<CVirtualizedCpu> m_vCpu;
+	CMemObj<CVirtualizedCpu> m_vCpu;
 };
 
 #define kCpuidMark1	MAKEFOURCC(' ', 'o', 'p', 'e')
 #define kCpuidMark2	MAKEFOURCC('n', ' ', 'g', 'a')
 #define kCpuidMark3	MAKEFOURCC('t', 'e', '!', '\0')
-
-#endif //__CRONOS_H__

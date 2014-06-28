@@ -10,18 +10,6 @@
     <ClCompile Include="src\VMX.cpp">
       <Filter>src\VMX</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\base\Common.cpp">
-      <Filter>Common\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\base\instrinsics.cpp">
-      <Filter>Common\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\base\libc.cpp">
-      <Filter>Common\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\Kernel\MemoryMapping.cpp">
-      <Filter>Common\Kernel</Filter>
-    </ClCompile>
     <ClCompile Include="src\Cronos.cpp">
       <Filter>src\Cronos</Filter>
     </ClCompile>
@@ -42,29 +30,20 @@
     <ClInclude Include="src\VMX.h">
       <Filter>src\VMX</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\base\Common.h">
-      <Filter>Common\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\base\instrinsics.h">
-      <Filter>Common\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\base\Shared.h">
-      <Filter>Common\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\base\SharedMacros.hpp">
-      <Filter>Common\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\CPU\msr.h">
-      <Filter>Common\CPU</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\Kernel\MemoryMapping.h">
-      <Filter>Common\Kernel</Filter>
-    </ClInclude>
     <ClInclude Include="src\Cronos.h">
       <Filter>src\Cronos</Filter>
     </ClInclude>
     <ClInclude Include="src\VmmAutoExit.hpp">
       <Filter>src\HyperVisor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\utils\ProcessorWalker.hpp">
+      <Filter>Common\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\cpu\msr.h">
+      <Filter>Common\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\auto\MemoryObj.hpp">
+      <Filter>Common\auto</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -95,23 +74,23 @@
     <Filter Include="src\Common\CPU">
       <UniqueIdentifier>{7896e3ec-6baf-455d-a91d-6b113b4c3917}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Common">
-      <UniqueIdentifier>{eb11dd59-d89b-48fb-8c93-d2e1dc1afc4a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Common\amd64">
-      <UniqueIdentifier>{cf2bc15a-08df-41f8-a6af-5038488e1a81}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Common\base">
-      <UniqueIdentifier>{b0d9002f-c82f-4a3c-8991-0a1071340e4a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Common\Kernel">
-      <UniqueIdentifier>{8157ad02-6718-4092-a35f-d8f60ee5237e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Common\CPU">
-      <UniqueIdentifier>{0a6dedeb-2c76-45aa-975c-af749a8d813a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\Cronos">
       <UniqueIdentifier>{b0af3d85-daac-4087-b4fe-0737566b59ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{b84fa798-a43a-48ef-9cd6-de9ceaa94cbf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common\amd64">
+      <UniqueIdentifier>{00cb146d-6357-4ac6-bb5e-30a1aec1c2a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common\utils">
+      <UniqueIdentifier>{215c58db-5a9c-4483-aa18-ed427914e39e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common\cpu">
+      <UniqueIdentifier>{18ecadf4-7422-4ad2-8865-02704fc28b0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common\auto">
+      <UniqueIdentifier>{72d67ba9-3ef8-454c-bc26-85733049b4d5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

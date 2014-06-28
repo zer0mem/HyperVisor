@@ -3,9 +3,8 @@
  * @author created by: Peter Hlavaty
  */
 
-#include "drv_common.h"
 #include "Cronos.h"
-#include "../../Common/base/instrinsics.h"
+#include <Common/utils/ProcessorWalker.hpp>
 
 //examples of callbacks functionality 
 
@@ -36,16 +35,16 @@ CCRonos::CCRonos() :
 CCRonos::~CCRonos()
 {
 	DbgPrint("\n<CCRonos dtor");
-	KeBreak();
+	DbgBreakPoint();
 
 	for (BYTE i = 0; i < m_vCpu.GetCount(); i++)
 		m_vCpu[i].~CVirtualizedCpu();
 
 
-	CALLBACK* callbacks = &m_callbacks;
-	while (NULL != callbacks->Next)
+	HV_CALLBACK* callbacks = &m_callbacks;
+	while (callbacks->Next)
 	{
-		CALLBACK* callback = callbacks;
+		HV_CALLBACK* callback = callbacks;
 		callbacks = callbacks->Next;
 		delete callbacks;
 	}
@@ -54,7 +53,8 @@ CCRonos::~CCRonos()
 //virtuals
 
 __checkReturn 
-bool CCRonos::SetVirtualizationCallbacks()
+bool 
+CCRonos::SetVirtualizationCallbacks()
 {
 	DbgPrint("CCRonos::SetVirtualizationCallbacks\n");
 	m_traps[VMX_EXIT_CPUID] = HVCpuid;
@@ -64,7 +64,8 @@ bool CCRonos::SetVirtualizationCallbacks()
 			RegisterCallback(&m_callbacks, HVCallback3));
 }
 
-void CCRonos::PerCoreAction(
+void 
+CCRonos::PerCoreAction(
 	__in BYTE coreId
 	)
 {
@@ -83,7 +84,8 @@ void CCRonos::PerCoreAction(
 
 //public hv on/off
 
-bool CCRonos::EnableVirtualization()
+bool 
+CCRonos::EnableVirtualization()
 {
 	if (m_vCpu.IsAllocated())
 	{
@@ -91,11 +93,8 @@ bool CCRonos::EnableVirtualization()
 		{
 			BYTE coreID = 0;
 			CProcessorWalker cpu_w;
-			while (cpu_w.NextCore(&coreID, coreID))
-			{
+			while (cpu_w.NextCore(&coreID))
 				PerCoreAction(coreID);
-				coreID++;//follow with next core
-			}
 
 			return true;
 		}
@@ -103,7 +102,8 @@ bool CCRonos::EnableVirtualization()
 	return false;
 }
 
-void CCRonos::Install()
+void 
+CCRonos::Install()
 {
 	if (EnableVirtualization())
 	{
@@ -120,7 +120,8 @@ void CCRonos::Install()
 	}
 }
 
-void CCRonos::StopVirtualization()
+void 
+CCRonos::StopVirtualization()
 {
 	if (m_vCpu.IsAllocated())
 	{
@@ -129,7 +130,7 @@ void CCRonos::StopVirtualization()
 			while(!m_vCpu[i].VirtualizationOFF())
 			{
 				DbgPrint("\n!fail to off core : %x", i);
-				KeBreak();
+				DbgBreakPoint();
 			}
 
 			DbgPrint("\n<core : %x is offline", i);
@@ -139,19 +140,20 @@ void CCRonos::StopVirtualization()
 
 //callbacks related method -> aka how to extend mechanism for generic usage ... ;)
 
-bool CCRonos::RegisterCallback( 
-	__in CALLBACK* callbacks, 
+bool
+CCRonos::RegisterCallback( 
+	__in HV_CALLBACK* callbacks, 
 	__in const VMTrap callback 
 	)
 {
 	while (NULL != callbacks->Next)
 		callbacks = callbacks->Next;
 	
-	CALLBACK* t_callback = new CALLBACK;
+	HV_CALLBACK* t_callback = new HV_CALLBACK;
 	if (!t_callback)
 		return false;
 
-	::new(callbacks) CALLBACK(callback, t_callback);
+	::new(callbacks) HV_CALLBACK(callback, t_callback);
 
 	return true;
 }
@@ -159,27 +161,29 @@ bool CCRonos::RegisterCallback(
 
 //calbacks called from HYPERVISOR!!!
 
-//__in_opt CALLBACK** callbacks == ptr to m_callbacks
-void CCRonos::HVCallback(
+//__in_opt HV_CALLBACK** callbacks == ptr to m_callbacks
+void 
+CCRonos::HVCallback(
 	__inout ULONG_PTR reg[REG_COUNT], 
-	__in_opt const CALLBACK** callbacks
+	__in_opt const HV_CALLBACK** callbacks
 	)
 {
 	if (!callbacks)
 		return;
 
-	const CALLBACK* t_callbacks = *callbacks;
+	const HV_CALLBACK* t_callbacks = *callbacks;
 	if (!t_callbacks)
 		return;
 
-	while (t_callbacks->Callback != NULL)
+	while (t_callbacks->Callback)
 	{
 		t_callbacks->Callback(reg);
 		t_callbacks = t_callbacks->Next;
 	}
 }
 
-void CCRonos::HVCpuid( 
+void 
+CCRonos::HVCpuid( 
 	__inout ULONG_PTR reg[REG_COUNT] 
 	)
 {
@@ -189,7 +193,8 @@ void CCRonos::HVCpuid(
 
 //extended hypevisor callbacks mechanism
 
-void HVCallback1( 
+void 
+HVCallback1( 
 	__inout ULONG_PTR reg[REG_COUNT] 
 	)
 {
@@ -203,7 +208,8 @@ void HVCallback1(
 	}
 }
 
-void HVCallback2( 
+void 
+HVCallback2( 
 	__inout ULONG_PTR reg[REG_COUNT] 
 	)
 {
@@ -217,7 +223,8 @@ void HVCallback2(
 	}
 }
 
-void HVCallback3( 
+void 
+HVCallback3( 
 	__inout ULONG_PTR reg[REG_COUNT] 
 	)
 {

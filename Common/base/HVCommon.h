@@ -1,18 +1,30 @@
-/**
- * @file HVCommon.h
- * @author created by: Peter Hlavaty
- */
+#pragma once
 
-#ifndef __HVCOMMON_H__
-#define __HVCOMMON_H__
+#include <ntifs.h>
+#include <minwindef.h>
 
-#include "new.h"
-#include "wdm.h"
+#include <memory>
 
-#include "../../../Common/CPU/msr.h"
 #include "../../Common/CPU/vmcs.h"
+#include "instrinsics.h"
 
-#include "../../../Common/base/instrinsics.h"
+//#define ALIGN(addr, granularity)	std::align(granularity, 1, addr, 1)//(ULONG_PTR)((ULONG_PTR)(addr) & (~((granularity) - 1)))//
+
+namespace CommonRoutines
+{
+	__checkReturn
+	template<typename Type_t>
+	Type_t*
+	align(
+		__in const void* ptr,
+		__in size_t alignment,
+		__in_opt size_t sizeReq = 1,
+		__in_opt size_t sizeAvailable = static_cast<size_t>(~0)
+		)
+	{
+		return static_cast<Type_t*>(std::align(alignment, sizeReq, const_cast<void*&>(ptr), sizeAvailable));
+	};
+};
 
 
 #pragma pack(push, 1)
@@ -73,7 +85,7 @@ struct GDT
 
 struct VMCS
 {
-	PVOID pvmcs;
+	void* pvmcs;
 	PHYSICAL_ADDRESS vmcs;
 };
 
@@ -134,7 +146,7 @@ struct GUEST_STATE
 #define FEATURE_CONTROL_LOCKED			BTS(0)
 #define FEATURE_CONTROL_VMXON_ENABLED	BTS(2)
 
-#define	MAX_CALLBACK			VMX_EXIT_XSETBV+2
+#define	MAX_HV_CALLBACK			VMX_EXIT_XSETBV+2
 
 enum
 {
@@ -160,6 +172,43 @@ enum
 #define kCpuidMark	MAKEFOURCC('P', 'I', 'L', 'L')
 #define kStackMark	MAKEFOURCC('C', 'O', 'L', 'D')
 
-EXTERN_C ULONG_PTR __x64_cpuid(ULONG_PTR);
+//------------------------------------------------------------------
+// ****************** DEFINE PUSHAQ order of regs ******************
+//------------------------------------------------------------------
 
-#endif //__HVCOMMON_H__
+enum RegSetx86
+{
+	RDI = 0,
+	RSI,
+	RBP,
+	RSP,
+	RBX,
+	RDX,
+	RCX,
+	RAX,
+	REG_X86_COUNT
+};
+
+enum RegSetx64
+{
+	R15 = REG_X86_COUNT,
+	R14,
+	R13,
+	R12,
+	R11,
+	R10,
+	R9,
+	R8,
+	REG_X64_COUNT
+};
+
+#define REG_COUNT REG_X64_COUNT
+
+enum RegFastCallX64Volatile
+{
+	VOLATILE_REG_RCX = 0,
+	VOLATILE_REG_RDX,
+	VOLATILE_REG_R8,
+	VOLATILE_REG_R9,
+	VOLATILE_REG_COUNT
+};

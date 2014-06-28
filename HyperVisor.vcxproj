@@ -40,7 +40,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <CharacterSet>NotSet</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>WindowsKernelModeDriver8.0</PlatformToolset>
+    <PlatformToolset>WindowsKernelModeDriver8.1</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -227,12 +227,12 @@
     </Midl>
     <ClCompile>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)\src;$(SolutionDir);C:\Program Files (x86)\Windows Kits\8.0\Include\shared;C:\Program Files (x86)\Windows Kits\8.0\Include\km;C:\Program Files (x86)\Windows Kits\8.0\Include\um;C:\Program Files (x86)\Windows Kits\8.0\Include\km\crt;%(AdditionalIncludeDirectories);$(ProjectDir);$(BASEDIR2K3)\inc\ddk\wnet;$(BASEDIR2K3)\inc\ifs\wnet;$(BASEDIR2K3)\inc\wnet;$(BASEDIR2K3)\inc\crt</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(WindowsSDKDir)\Include\shared;$(WindowsSDKDir)\Include\km;$(VCInstallDir)/Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64; _WIN64; _M_AMD64; _AMD_64_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <StructMemberAlignment>8Bytes</StructMemberAlignment>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
@@ -240,7 +240,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <CallingConvention>StdCall</CallingConvention>
+      <CallingConvention>FastCall</CallingConvention>
       <OmitDefaultLibName>true</OmitDefaultLibName>
       <TreatWarningAsError>false</TreatWarningAsError>
       <PrecompiledHeaderFile>drv_common.h</PrecompiledHeaderFile>
@@ -268,22 +268,15 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Common\base\Common.cpp" />
-    <ClCompile Include="..\Common\base\instrinsics.cpp" />
-    <ClCompile Include="..\Common\base\libc.cpp" />
-    <ClCompile Include="..\Common\Kernel\MemoryMapping.cpp" />
     <ClCompile Include="src\Cronos.cpp" />
     <ClCompile Include="src\HyperVisor.cpp" />
     <ClCompile Include="src\VirtualizedCpu.cpp" />
     <ClCompile Include="src\VMX.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Common\base\Common.h" />
-    <ClInclude Include="..\Common\base\instrinsics.h" />
-    <ClInclude Include="..\Common\base\Shared.h" />
-    <ClInclude Include="..\Common\base\SharedMacros.hpp" />
-    <ClInclude Include="..\Common\CPU\msr.h" />
-    <ClInclude Include="..\Common\Kernel\MemoryMapping.h" />
+    <ClInclude Include="..\Common\auto\MemoryObj.hpp" />
+    <ClInclude Include="..\Common\cpu\msr.h" />
+    <ClInclude Include="..\Common\utils\ProcessorWalker.hpp" />
     <ClInclude Include="Common\base\HVCommon.h" />
     <ClInclude Include="Common\CPU\vmcs.h" />
     <ClInclude Include="src\Cronos.h" />
@@ -302,6 +295,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Common\amd64\common.inc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libc\libc.vcxproj">
+      <Project>{6b090b01-76a1-4521-902d-6011fe9aa4ed}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

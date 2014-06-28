@@ -1,80 +1,92 @@
-/**
- * @file VMX.h
- * @author created by: Peter Hlavaty
- */
-
-#ifndef __VMX_H__
-#define __VMX_H__
+#pragma once
 
 #include "../Common/base/HVCommon.h"
 
 class CVmx
 {
+	static
+	void
+	MmFreeNonCachedMemoryHVRes(
+		__inout void* hvResource
+		);
 public:
 	CVmx(
 		__in KAFFINITY procId,
 		__in size_t exceptionhandling = 0
 		);
-	~CVmx();	
 
 	__checkReturn 
-	bool InstallHyperVisor(
+	bool 
+	InstallHyperVisor(
 		__in const void* hvEntryPoint, 
 		__in void* hvStack
 		);
 	
 	__checkReturn
-	EVmErrors VmcsToRing0();
+	EVmErrors 
+	VmcsToRing0();
 	
 	//force inline and public
 	__checkReturn 
-	bool CpuActivated() const
+	bool
+	CpuActivated() const
 	{
 		return m_cpuActivated;
 	}
 	
 //static
 	static
-	void EnableVirtualization();
+	void 
+	EnableVirtualization();
 
 	static 
 	__checkReturn 
-	bool IsVirtualizationLocked();
+	bool
+	IsVirtualizationLocked();
 
 	static
 	__checkReturn
-	bool IsVirtualizationEnabled();
+	bool 
+	IsVirtualizationEnabled();
 
 protected:
 	__checkReturn 
-	bool VmcsInit();
+	bool 
+	VmcsInit();
 
 	__checkReturn 
-	bool GetGuestState(
+	bool
+	GetGuestState(
 		__in KAFFINITY procId
 		);
 
-	void GetSegmentDescriptor(
+	void 
+	GetSegmentDescriptor(
 		__out SEGMENT_SELECTOR* segSel, 
 		__in ULONG_PTR selector
 		);
 
-	EVmErrors SetSegSelector(
+	EVmErrors
+	SetSegSelector(
 		__in ULONG_PTR segSelector,
 		__in ULONG_PTR segField
 		);
 
 	__checkReturn
-	EVmErrors SetCRx();
+	EVmErrors 
+	SetCRx();
 
 	__checkReturn
-	EVmErrors SetControls();
+	EVmErrors 
+	SetControls();
 
 	__checkReturn
-	EVmErrors SetDT();
+	EVmErrors 
+	SetDT();
 
 	__checkReturn
-	EVmErrors SetSysCall();
+	EVmErrors 
+	SetSysCall();
 
 protected:
 	bool m_cpuActivated;
@@ -83,6 +95,7 @@ protected:
 private:
 	bool m_preparedState;
 	GUEST_STATE	m_guestState;
-};
 
-#endif //__VMX_H__
+	std::unique_ptr<char, decltype(&MmFreeNonCachedMemoryHVRes)> m_pGVmcs;
+	std::unique_ptr<char, decltype(&MmFreeNonCachedMemoryHVRes)> m_pHVmcs;
+};
