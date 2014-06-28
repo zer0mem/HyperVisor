@@ -4,7 +4,7 @@
  */
 
 #include "Cronos.h"
-#include <Common/utils/ProcessorWalker.hpp>
+#include <miniCommon/utils/ProcessorWalker.hpp>
 
 //examples of callbacks functionality 
 
