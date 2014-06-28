@@ -305,20 +305,19 @@ CVmx::GetGuestState(
 	m_guestState.SEIP = reinterpret_cast<BYTE*>(rdmsr(IA64_SYSENTER_EIP) & SEG_D_LIMIT);
 	m_guestState.SESP = reinterpret_cast<BYTE*>(rdmsr(IA32_SYSENTER_ESP) & SEG_D_LIMIT);
 
-	m_guestState.GVmcs.pvmcs = MmAllocateNonCachedMemory(PAGE_SIZE);
-	if (NULL == m_pGVmcs.get())
+	if (!m_pGVmcs.get())
 		return false;
 
+	m_guestState.GVmcs.pvmcs = m_pGVmcs.get();
 	RtlZeroMemory(m_guestState.GVmcs.pvmcs, PAGE_SIZE);
 	m_guestState.GVmcs.vmcs = MmGetPhysicalAddress(m_guestState.GVmcs.pvmcs);
 
-	m_guestState.HVmcs.pvmcs = MmAllocateNonCachedMemory(PAGE_SIZE);
-	if (NULL == m_pHVmcs.get())
+	if (!m_pHVmcs.get())
 		return false;
 
+	m_guestState.HVmcs.pvmcs = m_pHVmcs.get();
 	RtlZeroMemory(m_guestState.HVmcs.pvmcs, PAGE_SIZE);
 	m_guestState.HVmcs.vmcs = MmGetPhysicalAddress(m_guestState.HVmcs.pvmcs);
-
 
 	sgdt(&(m_guestState.Gdtr));
 	sidt(&(m_guestState.Idtr));
