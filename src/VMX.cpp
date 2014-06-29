@@ -4,7 +4,7 @@
  */
 
 #include "VMX.h"
-#include <miniCommon/cpu/msr.h>
+#include <Common/cpu/msr.h>
 
 extern "C" 
 void

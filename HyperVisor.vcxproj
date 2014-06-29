@@ -278,6 +278,7 @@
     <ClInclude Include="..\Common\cpu\msr.h" />
     <ClInclude Include="..\Common\utils\ProcessorWalker.hpp" />
     <ClInclude Include="Common\base\HVCommon.h" />
+    <ClInclude Include="Common\base\instrinsics.h" />
     <ClInclude Include="Common\CPU\vmcs.h" />
     <ClInclude Include="src\Cronos.h" />
     <ClInclude Include="src\HyperVisor.h" />

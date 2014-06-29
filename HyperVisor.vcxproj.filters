@@ -45,6 +45,9 @@
     <ClInclude Include="..\Common\auto\MemoryObj.hpp">
       <Filter>Common\auto</Filter>
     </ClInclude>
+    <ClInclude Include="Common\base\instrinsics.h">
+      <Filter>src\Common\base</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="driver_template.rc" />

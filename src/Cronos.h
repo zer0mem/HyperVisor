@@ -1,6 +1,6 @@
 #pragma once
 
-#include <miniCommon/auto/MemoryObj.hpp>
+#include <Common/auto/MemoryObj.hpp>
 #include "../../HyperVisor/src/VirtualizedCpu.h"
 
 struct HV_CALLBACK
