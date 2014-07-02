@@ -94,7 +94,7 @@ CCRonos::EnableVirtualization()
 			BYTE coreID = 0;
 			CProcessorWalker cpu_w;
 			while (cpu_w.NextCore(&coreID))
-				PerCoreAction(coreID);
+				PerCoreAction(coreID++);
 
 			return true;
 		}
