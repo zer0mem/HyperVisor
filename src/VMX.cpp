@@ -210,7 +210,7 @@ CVmx::VmcsInit()
 	VMWRITE_ERR_QUITB(VMX_VMCS16_HOST_FIELD_GS, m_guestState.Gs & 0xf8);
 	VMWRITE_ERR_QUITB(VMX_VMCS16_HOST_FIELD_TR, m_guestState.Tr);
 
-	RtlZeroMemory(reinterpret_cast<void*>(reinterpret_cast<ULONG_PTR>(m_guestState.GVmcs.pvmcs) + 4), sizeof(void*) - 4);
+	*(ULONG_PTR*)(&m_guestState.GVmcs.pvmcs) &= 0xFFFFFFFF;
 
 	VMWRITE_ERR_QUITB(VMX_VMCS64_GUEST_RSP, guest_rsp);
 	VMWRITE_ERR_QUITB(VMX_VMCS64_GUEST_RIP, guest_rip);
